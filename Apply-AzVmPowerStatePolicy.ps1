@@ -18,7 +18,7 @@ Workflow Apply-AzVmPowerStatePolicy
 {
 	Param (
 		[Parameter(Mandatory, Position = 1)]
-		[string]$AzureCredentialAsset
+		[string]$AzureCredentialAsset = 'automation'
 		 ,
 		[Parameter(Mandatory, Position = 2)]
 		[string]$AzureSubscription
@@ -28,7 +28,7 @@ Workflow Apply-AzVmPowerStatePolicy
 		 ,
 		#[System.TimeZoneInfo]::GetSystemTimeZones() |ft -au
 		[Parameter(Mandatory = $false, Position = 4)]
-		[string]$AzureVmTimeZone = 'Israel Standard Time'
+		[string]$AzureVmTimeZone = 'New Zealand Standard Time'
 		 ,
 		[Parameter(Mandatory = $false, Position = 5)]
 		[boolean]$WhatIf = $true
@@ -58,11 +58,17 @@ Workflow Apply-AzVmPowerStatePolicy
 					$azTime = [datetime]::Now
 					$TimeShort = $azTime.ToString('HH:mm')
 					$TimeVm = [System.TimeZoneInfo]::ConvertTimeFromUtc($TimeShort, [System.TimeZoneInfo]::FindSystemTimeZoneById($AzureVmTimeZone))
+                    $TimeVmTime = $TimeVM.TimeOfDay
+
+                    $powerOn = [datetime]$AzVm.Tags.PowerOn
+                    $powerOnTime = $powerOn.TimeOfDay
+                    $powerOff = [datetime]$AzVm.Tags.PowerOff
+                    $powerOffTime = $powerOff.TimeOfDay
 					
 					### 00:00---On+++Off---00:00 ###
-					if ([datetime]$AzVm.Tags.PowerOn -lt [datetime]$AzVm.Tags.PowerOff)
+					if ($powerOnTime -lt $powerOffTime)
 					{
-						if ($TimeVm -gt [datetime]$AzVm.Tags.PowerOff -or $TimeVm -lt [datetime]$AzVm.Tags.PowerOn)
+						if ($TimeVmTime -gt $powerOffTime -or $TimeVmTime -lt $powerOnTime)
 						{
 							if ($WhatIf) { $Status = 'Simulation' }
 							else
@@ -77,7 +83,7 @@ Workflow Apply-AzVmPowerStatePolicy
 					}
 					else
 					{
-						if ($TimeVm -gt [datetime]$AzVm.Tags.PowerOff -and $TimeVm -lt [datetime]$AzVm.Tags.PowerOn)
+						if ($TimeVmTime -gt $powerOffTime -and $TimeVmTime -lt $powerOnTime)
 						{
 							if ($WhatIf) { $Status = 'Simulation' }
 							else
@@ -99,11 +105,17 @@ Workflow Apply-AzVmPowerStatePolicy
 					$azTime = [datetime]::Now
 					$TimeShort = $azTime.ToString('HH:mm')
 					$TimeVm = [System.TimeZoneInfo]::ConvertTimeFromUtc($TimeShort, [System.TimeZoneInfo]::FindSystemTimeZoneById($AzureVmTimeZone))
+                    $TimeVmTime = $TimeVM.TimeOfDay
+
+                    $powerOn = [datetime]$AzVm.Tags.PowerOn
+                    $powerOnTime = $powerOn.TimeOfDay
+                    $powerOff = [datetime]$AzVm.Tags.PowerOff
+                    $powerOffTime = $powerOff.TimeOfDay
 					
 					### 00:00---On+++Off---00:00 ###
-					if ([datetime]$AzVm.Tags.PowerOn -lt [datetime]$AzVm.Tags.PowerOff)
+					if ($powerOnTime -lt $powerOffTime)
 					{
-						if ($TimeVm -gt [datetime]$AzVm.Tags.PowerOn -and $TimeVm -lt [datetime]$AzVm.Tags.PowerOff)
+						if ($TimeVmTime -gt $powerOnTime -and $TimeVmTime -lt $powerOffTime)
 						{
 							if ($WhatIf) { $Status = 'Simulation' }
 							else
@@ -118,7 +130,7 @@ Workflow Apply-AzVmPowerStatePolicy
 					}
 					else
 					{
-						if ($TimeVm -gt [datetime]$AzVm.Tags.PowerOn -or $TimeVm -lt [datetime]$AzVm.Tags.PowerOff)
+						if ($TimeVmTime -gt $powerOnTime -or $TimeVmTime -lt $powerOffTime)
 						{
 							if ($WhatIf) { $Status = 'Simulation' }
 							else
